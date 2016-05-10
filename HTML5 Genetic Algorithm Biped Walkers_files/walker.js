@@ -6,9 +6,10 @@ var Walker = function() {
   this.__constructor.apply(this, arguments);
 }
 
-Walker.prototype.__constructor = function(world, genome) {
+Walker.prototype.__constructor = function(world, genome, parentWalker) {
 
   this.world = globals.world;
+  this.parentWalker = parentWalker || {};
 
   this.density = 106.2; // common for all fixtures, no reason to be too specific
 
@@ -396,9 +397,10 @@ Walker.prototype.simulationStep = function(motor_noise) {
 
   if(config.check_health) {
     if(body_delta < config.instadeath_delta) {
+      console.log(this.score, this.name, this.parentWalker.score, this.parentWalker.name);
       this.health = 0;
     } else {
-      this.health--;
+      // this.health--;
     }
   }
 

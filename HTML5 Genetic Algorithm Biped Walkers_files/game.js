@@ -81,8 +81,8 @@ createPopulation = function(genomes) {
   updateGeneration(globals.generation_count);
   var walkers = [];
   for(var k = 0; k < config.population_size; k++) {
-    if(genomes && genomes[k]) {
-      walkers.push(new Walker(globals.world, genomes[k]));
+    if(genomes && genomes[k] && genomes[k]["newGenome"]) {
+      walkers.push(new Walker(globals.world, genomes[k]["newGenome"], genomes[k]["parentWalker"]));
     } else {
       walkers.push(new Walker(globals.world));
     }
@@ -161,11 +161,17 @@ createNewGenerationGenomes = function() {
   var parents = null;
   // clones
   for(var k = 0; k < config.elite_clones; k++) {
-    genomes.push(globals.walkers[k].genome);
+    genomes.push({"newGenome": globals.walkers[k].genome, "parentWalker": globals.walkers[k]});
   }
   for(var k = config.elite_clones; k < config.population_size; k++) {
     if(parents = pickParents()) {
-      genomes.push(copulate(globals.walkers[parents[0]], globals.walkers[parents[1]]));
+      var parent1 = globals.walkers[parents[0]];
+      parent1 =  parent1.parentWalker && (parent1.score < parent1.parentWalker.score) ? parent1.parentWalker : parent1 ;
+      var parent2 = globals.walkers[parents[1]];
+      parent2 = parent2.parentWalker && (parent2.score < parent2.parentWalker.score)  ? parent2.parentWalker : parent2;
+      console.log(parent1.name, parent2.name);
+      var newGenome = copulate(parent1, parent2);
+      genomes.push({"newGenome": newGenome["newGenome"], "parentWalker": newGenome["parentGenome"]});
     }
   }
 //  genomes = mutateClones(genomes);
@@ -190,6 +196,7 @@ pickParents = function() {
 
 copulate = function(walker_1, walker_2) {
   var new_genome = [];
+  var prev_genome = walker_1;
   for(var k = 0; k < walker_1.genome.length; k++) {
     if(Math.random() < 0.5) {
       var parent = walker_1;
@@ -210,7 +217,10 @@ copulate = function(walker_1, walker_2) {
     }
     new_genome[k] = new_gene;
   }
-  return new_genome;
+  return {
+    "newGenome" : new_genome,
+    "parentGenome" : walker_1
+  }
 }
 
 mutateClones = function(genomes) {
